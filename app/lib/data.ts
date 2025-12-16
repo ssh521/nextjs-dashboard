@@ -2,6 +2,7 @@ import mysql from 'mysql2/promise';
 import {
   CustomerField,
   CustomersTableType,
+  CustomerForm,
   InvoiceForm,
   InvoicesTable,
   LatestInvoiceRaw,
@@ -220,8 +221,9 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(query: string, currentPage: number) {
   const db = await getConnection();
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
   const searchPattern = `%${query}%`;
 
   try {
@@ -241,7 +243,8 @@ export async function fetchFilteredCustomers(query: string) {
         LOWER(customers.email) LIKE LOWER(?)
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
 		ORDER BY customers.name ASC
-	  `, [searchPattern, searchPattern]);
+		LIMIT ? OFFSET ?
+	  `, [searchPattern, searchPattern, ITEMS_PER_PAGE, offset]);
 
     const customers = (data as CustomersTableType[]).map((customer) => ({
       ...customer,
@@ -253,6 +256,52 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  } finally {
+    await db.end();
+  }
+}
+
+export async function fetchCustomersPages(query: string) {
+  const db = await getConnection();
+  const searchPattern = `%${query}%`;
+
+  try {
+    const [data] = await db.execute(`
+      SELECT COUNT(DISTINCT customers.id) as count
+      FROM customers
+      WHERE
+        LOWER(customers.name) LIKE LOWER(?) OR
+        LOWER(customers.email) LIKE LOWER(?)
+    `, [searchPattern, searchPattern]);
+
+    const totalPages = Math.ceil(Number((data as any[])[0]?.count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of customers.');
+  } finally {
+    await db.end();
+  }
+}
+
+export async function fetchCustomerById(id: string) {
+  const db = await getConnection();
+  try {
+    const [data] = await db.execute(`
+      SELECT
+        id,
+        name,
+        email,
+        image_url
+      FROM customers
+      WHERE id = ?
+    `, [id]);
+
+    const customer = (data as CustomerForm[])[0];
+    return customer;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch customer.');
   } finally {
     await db.end();
   }
