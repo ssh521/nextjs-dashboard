@@ -5,6 +5,8 @@ import mysql from "mysql2/promise";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
+import { signIn } from "@/auth";
+import { AuthError } from "next-auth";
 
 async function getConnection() {
   return mysql.createConnection({
@@ -211,4 +213,23 @@ export async function deleteCustomer(id: string) {
   }
   revalidatePath("/dashboard/customers");
   redirect("/dashboard/customers");
+}
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return 'Invalid credentials.';
+        default:
+          return 'Something went wrong.';
+      }
+    }
+    throw error;
+  }
 }
