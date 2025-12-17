@@ -6,6 +6,11 @@ import { lusitana } from '@/app/ui/fonts';
 import { Suspense } from 'react';
 import { fetchCustomersPages } from '@/app/lib/data';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Customers",
+};
 
 export default async function Page(props: { searchParams?: Promise<{ query?: string; page?: string }> }) {
     const searchParams = await props.searchParams;

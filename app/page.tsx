@@ -5,6 +5,13 @@ import styles from "./ui/home.module.css";
 import { lusitana } from "./ui/fonts";
 import Image from "next/image";
 import { notFound } from 'next/navigation';
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Acme Dashboard",
+  description: "The official Next.js Learn Course Dashboard",
+  metadataBase: new URL('https://next-learn-dashboard.vercel.sh'),
+};
 
 export default function Page() {
   
@@ -31,6 +38,18 @@ export default function Page() {
           >
             <span>Log in</span> <ArrowRightIcon className="w-5 md:w-6" />
           </Link>
+
+          <Link
+            href="/register"
+            className="flex items-center gap-5 self-start rounded-lg bg-green-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-green-400 md:text-base"
+          >
+            <span>회원가입</span> <ArrowRightIcon className="w-5 md:w-6" />
+          </Link>
+
+          <div>
+          user@nextmail.com<br />
+          123456
+          </div>
         </div>
         <div className="flex items-center justify-center p-6 md:w-3/5 md:px-28 md:py-12">
           <Image

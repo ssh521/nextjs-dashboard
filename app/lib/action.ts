@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import bcrypt from "bcrypt";
 
 async function getConnection() {
   return mysql.createConnection({
@@ -232,4 +233,88 @@ export async function authenticate(
     }
     throw error;
   }
+}
+
+// 회원가입 관련 타입 및 스키마
+export type RegisterState = {
+  message: string | null;
+  errors?: {
+    name?: string[];
+    email?: string[];
+    password?: string[];
+    confirmPassword?: string[];
+  };
+};
+
+const RegisterFormSchema = z.object({
+  name: z.string({
+    invalid_type_error: '이름을 입력해주세요.',
+  }).min(1, { message: '이름을 입력해주세요.' }),
+  email: z.string({
+    invalid_type_error: '이메일을 입력해주세요.',
+  }).email({ message: '유효한 이메일을 입력해주세요.' }),
+  password: z.string({
+    invalid_type_error: '비밀번호를 입력해주세요.',
+  }).min(6, { message: '비밀번호는 최소 6자 이상이어야 합니다.' }),
+  confirmPassword: z.string({
+    invalid_type_error: '비밀번호 확인을 입력해주세요.',
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: '비밀번호가 일치하지 않습니다.',
+  path: ['confirmPassword'],
+});
+
+export async function register(prevState: RegisterState, formData: FormData) {
+  // 폼 데이터 검증
+  const validatedFields = RegisterFormSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "입력한 정보를 확인해주세요. 회원가입에 실패했습니다.",
+    };
+  }
+
+  const { name, email, password } = validatedFields.data;
+  const id = randomUUID();
+
+  // 이메일 중복 체크
+  const db = await getConnection();
+  try {
+    const [existingUsers] = await db.execute(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+
+    if ((existingUsers as any[]).length > 0) {
+      return {
+        errors: { email: ['이미 사용 중인 이메일입니다.'] },
+        message: "이미 사용 중인 이메일입니다.",
+      };
+    }
+
+    // 비밀번호 해싱
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 사용자 생성
+    await db.execute(
+      `INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)`,
+      [id, name, email, hashedPassword]
+    );
+  } catch (error) {
+    console.error('회원가입 오류:', error);
+    return {
+      message: "데이터베이스 오류가 발생했습니다. 다시 시도해주세요.",
+    };
+  } finally {
+    await db.end();
+  }
+
+  // 회원가입 성공 시 로그인 페이지로 리다이렉트
+  redirect("/login?registered=true");
 }
