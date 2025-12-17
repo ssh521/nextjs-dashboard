@@ -1,0 +1,19 @@
+services:
+  nextjs:
+    container_name: nextjs-dashboard
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      # 도메인 운영 시 필수(예시)
+      # - NEXTAUTH_URL=https://example.com
+      - NEXTAUTH_SECRET=GvxlE3YTI9oKYuMQTieMHsesBlnKhMbrAXEtL0pCc68=
+      # - AUTH_TRUST_HOST=true
+    ports:
+      # 중요: 127.0.0.1로만 바인딩해서 외부에서 3000 접근 불가
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ../data/uploads:/app/uploads
+      - ../logs:/app/logs
