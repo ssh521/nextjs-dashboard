@@ -60,6 +60,10 @@ pnpm build
 pnpm start
 ```
 
+## Synology Docker 사용법 (블로그 글 참조)
+
+blog : https://digitalogia.tistory.com/543
+
 ## Docker 사용
 
 Docker Compose를 사용하여 실행할 수 있습니다:
