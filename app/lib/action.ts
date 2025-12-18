@@ -220,15 +220,29 @@ export async function authenticate(
   prevState: string | undefined,
   formData: FormData,
 ) {
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const callbackUrl = String(formData.get("callbackUrl") ?? "/dashboard");
+
   try {
-    await signIn('credentials', formData);
-  } catch (error) {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: callbackUrl, // 핵심: 목적지 명시
+    });
+
+    // 여기까지 오면 보통 실행되지 않습니다(redirect가 발생)
+    return undefined;
+  } catch (error: any) {
+    // 핵심: NEXT_REDIRECT(리다이렉트 시그널) 는 절대 처리하지 말고 다시 던짐
+    if (error?.digest?.startsWith?.("NEXT_REDIRECT")) throw error;
+
     if (error instanceof AuthError) {
       switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials.';
+        case "CredentialsSignin":
+          return "Invalid credentials.";
         default:
-          return 'Something went wrong.';
+          return "Something went wrong.";
       }
     }
     throw error;
