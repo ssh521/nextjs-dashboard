@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import bcrypt from "bcrypt";
+import { headers } from "next/headers";
 
 async function getConnection() {
   return mysql.createConnection({
@@ -240,9 +241,9 @@ export async function authenticate(
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return "Invalid credentials.";
+          return "잘못된 이메일 또는 비밀번호입니다.";
         default:
-          return "Something went wrong.";
+          return "로그인 중 오류가 발생했습니다.";
       }
     }
     throw error;
