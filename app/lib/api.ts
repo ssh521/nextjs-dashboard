@@ -2,7 +2,7 @@
  * Laravel Sanctum API 호출 유틸리티
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://admin-yaver.test';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://admin-yaver.test';
 
 /**
  * CSRF 쿠키를 가져오는 함수 (Sanctum SPA 인증에 필요)
