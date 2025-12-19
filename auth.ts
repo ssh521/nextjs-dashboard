@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { User } from './app/lib/definitions';
 import { headers } from 'next/headers';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://admin-yaver.test';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://admin-yaver.test';
 
 /**
  * Laravel Sanctum API를 통한 로그인
